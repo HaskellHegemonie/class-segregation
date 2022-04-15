@@ -1,3 +1,5 @@
-Cargo.lock
+output/
 target/
+Cargo.lock
 stundenplan.txt
+subst_001.htm
