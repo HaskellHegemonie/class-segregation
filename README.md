@@ -1,8 +1,2 @@
 #class-segregation
-TODO: 
-OOP (ofc)
-Windows support (pathetic)
-Clean code up
-write a meaningful README.md
-Don't make it look like it was written by a noob
-use arch btw
+A command line utility to split up all our classes into separate html files
