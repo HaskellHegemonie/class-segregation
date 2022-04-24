@@ -2,7 +2,8 @@ use regress::Regex;
 use std::env::args;
 pub mod content_of_file;
 pub mod oop;
-fn main() {
+#[tokio::main]
+async fn main() {
     let path = args().nth(1);
     if let None = path {
         print!("Usage: command [FILE] [OUTPUT]\n{}", "Reads in a file, splits the classes up and writes single utf8 encoded html files with the information for the class only.\nBy default [OUTPUT] will be your current directory");
@@ -19,7 +20,7 @@ fn main() {
             output_dir += "/";
         }
     }
-    let file_content = content_of_file::read_file(&path);
+    let file_content = content_of_file::read_file(&path).await;
     // Regex to find everything on top of all classes
     let head_html_regex =
         Regex::with_flags(r#".+?(?=<td class="list inline_header" colspan="5")"#, "s").unwrap();
@@ -49,6 +50,10 @@ fn main() {
 
     // Get the html of all classes
     for regex_match in class_regex.find_iter(&file_content) {
+        let output_dir = output_dir.clone();
+        let head_html = head_html.clone();
+        let file_content = file_content.clone();
+        tokio::spawn(async move {
         let mut current_class = oop::Class::new();
         current_class.html_body = file_content[regex_match.range()].to_string();
         current_class.name = current_class
@@ -59,5 +64,6 @@ fn main() {
             .to_string();
         current_class.name = current_class.name[0..3].trim().to_string();
         current_class.generate_class_file(&head_html, foot_html, &output_dir);
+        });
     }
 }
