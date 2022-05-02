@@ -1,5 +1,6 @@
 use regress::Regex;
 use std::env::args;
+use tokio_stream::StreamExt;
 pub mod content_of_file;
 pub mod oop;
 #[tokio::main]
@@ -49,11 +50,8 @@ async fn main() {
     head_html = head_html.replace(r"iso-8859-1", "utf8");
 
     // Get the html of all classes
-    for regex_match in class_regex.find_iter(&file_content) {
-        let output_dir = output_dir.clone();
-        let head_html = head_html.clone();
-        let file_content = file_content.clone();
-        tokio::spawn(async move {
+    let mut stream = tokio_stream::iter(class_regex.find_iter(&file_content));
+    while let Some(regex_match) = stream.next().await{
         let mut current_class = oop::Class::new();
         current_class.html_body = file_content[regex_match.range()].to_string();
         current_class.name = current_class
@@ -64,6 +62,5 @@ async fn main() {
             .to_string();
         current_class.name = current_class.name[0..3].trim().to_string();
         current_class.generate_class_file(&head_html, foot_html, &output_dir);
-        });
     }
 }
